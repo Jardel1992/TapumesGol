@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Senhas de Lojas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Estilo para a barra de rolagem */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.5s linear;
+        }
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Gerenciador de Senhas de Lojas</h1>
+            <p class="text-gray-600 mt-2">Adicione e encontre facilmente as senhas dos cadeados das suas lojas.</p>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <!-- Coluna da Esquerda: Adicionar, Pesquisar e Importar -->
+            <div class="flex flex-col gap-8">
+                
+                <!-- Card para Adicionar Nova Loja -->
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h2 class="text-xl font-semibold mb-4 border-b pb-2">Adicionar Nova Loja</h2>
+                    <form id="add-store-form" class="space-y-4">
+                        <div>
+                            <label for="store-number" class="block text-sm font-medium text-gray-700">Número da Loja</label>
+                            <input type="text" id="store-number" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Ex: 101" required>
+                        </div>
+                        <div>
+                            <label for="store-password" class="block text-sm font-medium text-gray-700">Senha do Cadeado</label>
+                            <input type="text" id="store-password" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Ex: 1234" required>
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                            Adicionar Loja
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Card para Importar em Massa -->
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h2 class="text-xl font-semibold mb-4 border-b pb-2">Importar em Massa</h2>
+                    <p class="text-sm text-gray-600 mb-4">Cole os dados da sua planilha. Use o formato: <code class="bg-gray-200 px-1 rounded">Número da Loja,Senha</code> em cada linha.</p>
+                    <form id="import-form" class="space-y-4">
+                        <textarea id="bulk-import-data" rows="6" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="101,1234&#10;102,5678&#10;103,9012"></textarea>
+                        <button type="submit" class="w-full bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-150 ease-in-out">
+                            Importar Lojas
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+
+            <!-- Coluna da Direita: Pesquisa e Lista -->
+            <div class="flex flex-col gap-8">
+                <!-- Card para Pesquisar Loja -->
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h2 class="text-xl font-semibold mb-4 border-b pb-2">Pesquisar Senha</h2>
+                    <form id="search-form" class="space-y-4">
+                         <div>
+                            <label for="search-store-number" class="block text-sm font-medium text-gray-700">Digite o Número da Loja</label>
+                            <input type="text" id="search-store-number" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Digite o número para buscar...">
+                        </div>
+                    </form>
+                    <div id="search-result" class="mt-4 p-4 bg-gray-50 rounded-lg min-h-[80px] flex items-center justify-center">
+                        <span class="text-gray-500">A senha aparecerá aqui.</span>
+                    </div>
+                </div>
+
+                <!-- Card da Lista de Lojas -->
+                <div class="bg-white p-6 rounded-xl shadow-md flex-grow">
+                    <h2 class="text-xl font-semibold mb-4 border-b pb-2">Lojas Cadastradas</h2>
+                    <div id="store-list-container" class="max-h-[400px] overflow-y-auto pr-2">
+                        <ul id="store-list" class="space-y-3">
+                            <!-- Lojas serão inseridas aqui via JavaScript -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+        
+        <!-- Toast Notification -->
+        <div id="toast" class="toast"></div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elementos do DOM
+            const addStoreForm = document.getElementById('add-store-form');
+            const storeNumberInput = document.getElementById('store-number');
+            const storePasswordInput = document.getElementById('store-password');
+            
+            const searchInput = document.getElementById('search-store-number');
+            const searchResultDiv = document.getElementById('search-result');
+            
+            const storeList = document.getElementById('store-list');
+            const toast = document.getElementById('toast');
+
+            const importForm = document.getElementById('import-form');
+            const bulkImportData = document.getElementById('bulk-import-data');
+
+            // Carrega as lojas do localStorage ou inicializa um array vazio
+            let stores = JSON.parse(localStorage.getItem('stores')) || [];
+
+            // Função para salvar as lojas no localStorage
+            const saveStores = () => {
+                localStorage.setItem('stores', JSON.stringify(stores));
+            };
+
+            // Função para mostrar notificação (toast)
+            const showToast = (message, duration = 3000) => {
+                toast.textContent = message;
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, duration);
+            };
+
+            // Função para renderizar a lista de lojas na tela
+            const renderStores = () => {
+                storeList.innerHTML = ''; // Limpa a lista atual
+                if (stores.length === 0) {
+                    storeList.innerHTML = '<li class="text-center text-gray-500">Nenhuma loja cadastrada.</li>';
+                    return;
+                }
+                
+                // Ordena as lojas pelo número antes de renderizar
+                const sortedStores = [...stores].sort((a, b) => a.number.localeCompare(b.number, undefined, {numeric: true}));
+
+                sortedStores.forEach(store => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center justify-between bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors';
+                    li.innerHTML = `
+                        <div>
+                            <span class="font-semibold text-indigo-700">Loja: ${store.number}</span>
+                            <span class="text-gray-600 ml-4">Senha: ${store.password}</span>
+                        </div>
+                        <button data-store-number="${store.number}" class="delete-btn text-red-500 hover:text-red-700 font-semibold py-1 px-2 rounded-md transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" style="pointer-events: none;">
+                              <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    `;
+                    storeList.appendChild(li);
+                });
+            };
+
+            // Função para adicionar uma nova loja
+            const addStore = (e) => {
+                e.preventDefault();
+                const number = storeNumberInput.value.trim();
+                const password = storePasswordInput.value.trim();
+
+                if (number && password) {
+                    if (stores.some(store => store.number === number)) {
+                        showToast(`A loja número ${number} já existe.`);
+                        return;
+                    }
+                    stores.push({ number, password });
+                    saveStores();
+                    renderStores();
+                    showToast('Loja adicionada com sucesso!');
+                    addStoreForm.reset();
+                    storeNumberInput.focus();
+                }
+            };
+
+            // Função para deletar uma loja
+            const deleteStore = (e) => {
+                const button = e.target.closest('.delete-btn');
+                if (button) {
+                    const storeNumberToDelete = button.dataset.storeNumber;
+                    const originalIndex = stores.findIndex(s => s.number === storeNumberToDelete);
+
+                    if (originalIndex > -1) {
+                        stores.splice(originalIndex, 1);
+                        saveStores();
+                        renderStores();
+                        showToast(`Loja ${storeNumberToDelete} removida.`);
+                    }
+                }
+            };
+            
+            // Função para pesquisar uma loja
+            const searchStore = (e) => {
+                const searchTerm = e.target.value.trim().toLowerCase();
+                if (!searchTerm) {
+                    searchResultDiv.innerHTML = '<span class="text-gray-500">A senha aparecerá aqui.</span>';
+                    return;
+                }
+                const foundStore = stores.find(store => store.number.toLowerCase() === searchTerm);
+                if (foundStore) {
+                    searchResultDiv.innerHTML = `
+                        <div class="text-center">
+                            <p class="text-sm text-gray-600">Senha da Loja ${foundStore.number}</p>
+                            <p class="text-2xl font-bold text-indigo-600 mt-1">${foundStore.password}</p>
+                        </div>
+                    `;
+                } else {
+                    searchResultDiv.innerHTML = '<span class="text-red-500 font-medium">Loja não encontrada.</span>';
+                }
+            };
+
+            // Função para importar lojas em massa
+            const importStores = (e) => {
+                e.preventDefault();
+                const data = bulkImportData.value.trim();
+                if (!data) {
+                    showToast('A área de importação está vazia.');
+                    return;
+                }
+
+                // CORREÇÃO: Usar .split('\n') para dividir o texto em linhas corretamente.
+                const lines = data.split('\n');
+                let importedCount = 0;
+                let duplicateCount = 0;
+
+                lines.forEach(line => {
+                    line = line.trim();
+                    if (!line) return;
+
+                    // Divide por vírgula, ponto e vírgula ou tabulação (espaçamento)
+                    const parts = line.split(/[,;\t]/).map(part => part.trim());
+                    
+                    if (parts.length === 2) {
+                        const [number, password] = parts;
+                        if (number && password) {
+                            if (stores.some(store => store.number === number)) {
+                                duplicateCount++;
+                            } else {
+                                stores.push({ number, password });
+                                importedCount++;
+                            }
+                        }
+                    }
+                });
+
+                if (importedCount > 0) {
+                    saveStores();
+                    renderStores();
+                }
+                
+                let message = '';
+                if (importedCount > 0) {
+                    message += `${importedCount} loja(s) importada(s). `;
+                }
+                if (duplicateCount > 0) {
+                    message += `${duplicateCount} já existia(m).`;
+                }
+                if (message === '') {
+                    message = 'Nenhuma loja válida para importar. Verifique o formato.';
+                }
+
+                showToast(message, 5000);
+                importForm.reset();
+            };
+
+            // Adiciona os event listeners
+            addStoreForm.addEventListener('submit', addStore);
+            storeList.addEventListener('click', deleteStore);
+            searchInput.addEventListener('input', searchStore);
+            importForm.addEventListener('submit', importStores);
+
+            // Renderiza as lojas ao carregar a página
+            renderStores();
+        });
+    </script>
+
+</body>
+</html>
